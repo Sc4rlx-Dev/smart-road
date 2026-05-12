@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
@@ -34,6 +36,12 @@ fn main() -> Result<(), String> {
                 _ => {}
             }
         }
+
+        canvas.set_draw_color(Color::RGB(0, 0, 0));
+        canvas.clear();
+        canvas.present();
+
+        std::thread::sleep(Duration::from_millis(16));
     }
 
     Ok(())
