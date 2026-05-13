@@ -10,7 +10,7 @@ use sdl2::render::{Canvas, Texture, TextureCreator};
 use sdl2::surface::Surface;
 use sdl2::video::{Window, WindowContext};
 use crate::traffic::{Direction, Vehicule};
-use crate::{CAR_HEIGHT, CAR_WIDTH, COOLDOWN_FRAMES, DISTANCE, SAFE_DISTANCE};
+use crate::{CAR_HEIGHT, CAR_WIDTH, DISTANCE, SAFE_DISTANCE};
 
 
 
@@ -74,23 +74,15 @@ pub fn spawn_params(key: Keycode, ranger: i32) -> Option<(i32, i32, Direction, f
     }
 }
 
-pub fn try_spawn(
-    rect: &mut VecDeque<Vehicule>,
-    rng: &mut ThreadRng,
-    cooldowns: &mut [i32; 4],
-    key: Keycode,
-) -> bool {
+pub fn try_spawn(rect: &mut VecDeque<Vehicule>, rng: &mut ThreadRng, key: Keycode) -> bool {
     let ranger = rng.gen_range(0..3) * 45;
     if let Some((x, y, dir, angle)) = spawn_params(key, ranger) {
-        if cooldowns[dir.index()] == 0 {
-            let mut v = Vehicule::new(x, y, dir, angle);
-            if ranger == 0 || ranger == 90 {
-                v.turning = true;
-            }
-            rect.push_back(v);
-            cooldowns[dir.index()] = COOLDOWN_FRAMES;
-            return true;
+        let mut v = Vehicule::new(x, y, dir, angle);
+        if ranger == 0 || ranger == 90 {
+            v.turning = true;
         }
+        rect.push_back(v);
+        return true;
     }
     false
 }
@@ -125,13 +117,8 @@ pub fn step_traffic(rect: &mut VecDeque<Vehicule>, stats: &mut Stats) {
         }
 
         if can_update_car {
-            if v.frame_count >= 10 {
-                v.speed = if spedd_bolean { 3 } else { 1 };
-                v.update();
-                v.frame_count = 0;
-            } else {
-                v.frame_count += 1;
-            }
+            v.speed = if spedd_bolean { 2 } else { 1 };
+            v.update();
         }
 
         if is_off_screen(v) {

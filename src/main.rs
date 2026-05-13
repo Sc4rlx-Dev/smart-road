@@ -21,7 +21,6 @@ const CAR_WIDTH: u32 = 35;
 const CAR_HEIGHT: u32 = 30;
 const DISTANCE: i32 = 40;
 const SAFE_DISTANCE: i32 = 300;
-const COOLDOWN_FRAMES: i32 = 150;
 
 fn main() -> Result<(), String> {
     let sdl_context = sdl2::init()?;
@@ -45,7 +44,8 @@ fn main() -> Result<(), String> {
 
     let mut rect: VecDeque<Vehicule> = VecDeque::new();
     let mut rng = rand::thread_rng();
-    let mut cooldowns: [i32; 4] = [0; 4];
+    let mut can_add = false;
+    let mut cooldown_time = 0;
     let mut auto_spawn = false;
     let mut stats = Stats::new();
     let mut ask_exit = false;
@@ -87,22 +87,28 @@ fn main() -> Result<(), String> {
                     auto_spawn = !auto_spawn;
                 }
                 Event::KeyDown { keycode: Some(k), .. } => {
-                    try_spawn(&mut rect, &mut rng, &mut cooldowns, k);
+                    if !can_add && try_spawn(&mut rect, &mut rng, k) {
+                        can_add = true;
+                    }
                 }
                 _ => {}
             }
         }
 
         if !ask_exit {
-            for c in cooldowns.iter_mut() {
-                if *c > 0 {
-                    *c -= 1;
+            if can_add {
+                cooldown_time += 1;
+                if cooldown_time >= 40 {
+                    can_add = false;
+                    cooldown_time = 0;
                 }
             }
 
-            if auto_spawn {
+            if auto_spawn && !can_add {
                 let key = random_direction_keycode(&mut rng);
-                try_spawn(&mut rect, &mut rng, &mut cooldowns, key);
+                if try_spawn(&mut rect, &mut rng, key) {
+                    can_add = true;
+                }
             }
 
             step_traffic(&mut rect, &mut stats);

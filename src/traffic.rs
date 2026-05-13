@@ -44,7 +44,7 @@ impl Vehicule {
             y,
             direction,
             angle,
-            speed: 3,
+            speed: 4,
             distance: 0,
             timer: Instant::now(),
             states: true,
@@ -144,10 +144,17 @@ impl Vehicule {
             Direction::Right => self.x - other.x,
         };
 
-        self_remaining >= 0
+        let in_range = self_remaining >= 0
             && self_remaining <= safe_distance
             && other_remaining >= 0
-            && other_remaining <= safe_distance
+            && other_remaining <= safe_distance;
+        if !in_range {
+            return false;
+        }
+
+        self_remaining > other_remaining
+            || (self_remaining == other_remaining
+                && self.direction.index() > other.direction.index())
     }
 }
 

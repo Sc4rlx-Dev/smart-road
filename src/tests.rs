@@ -59,12 +59,34 @@ fn rear_end_conflict_one_car_brakes() {
 }
 
 #[test]
-fn cross_traffic_perpendicular_conflict_detected() {
+fn cross_traffic_further_car_yields() {
+    // up_car is 50px from crossing (y diff), left_car is 140px (x diff).
+    // Up is closer → has right of way; Left yields.
     let up_car = Vehicule::new(410, 450, Direction::Up, 0.0);
     let left_car = Vehicule::new(550, 400, Direction::Left, -90.0);
     assert!(
-        up_car.collitions(&left_car, 300),
-        "Up car at (410,450) and Left car at (550,400) approach the intersection point — should detect within slow zone"
+        left_car.collitions(&up_car, 300),
+        "further car (Left, 140px) should yield to closer car (Up, 50px)"
+    );
+    assert!(
+        !up_car.collitions(&left_car, 300),
+        "closer car (Up) has right of way and should NOT brake — no deadlock"
+    );
+}
+
+#[test]
+fn cross_traffic_tiebreak_resolves_deadlock() {
+    // Both equidistant from crossing → tiebreak by Direction::index().
+    // Up=0, Left=2 → Left yields, Up goes.
+    let up_car = Vehicule::new(410, 500, Direction::Up, 0.0);
+    let left_car = Vehicule::new(510, 400, Direction::Left, -90.0);
+    assert!(
+        left_car.collitions(&up_car, 300),
+        "on equal distance, higher Direction::index (Left=2) yields"
+    );
+    assert!(
+        !up_car.collitions(&left_car, 300),
+        "on equal distance, lower Direction::index (Up=0) proceeds"
     );
 }
 
