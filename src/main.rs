@@ -2,7 +2,7 @@ mod traffic;
 mod utils;
 
 use traffic::Vehicule;
-use utils::{load_texture_from_path, spawn_params, step_traffic};
+use utils::{load_texture_from_path, render_frame, spawn_params, step_traffic};
 
 use std::collections::VecDeque;
 use std::time::Duration;
@@ -10,8 +10,6 @@ use std::time::Duration;
 use rand::Rng;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
-use sdl2::pixels::Color;
-use sdl2::rect::Rect;
 
 const CAR_WIDTH: u32 = 35;
 const CAR_HEIGHT: u32 = 30;
@@ -37,17 +35,12 @@ fn main() -> Result<(), String> {
     let texture_creator = canvas.texture_creator();
     let road_texture = load_texture_from_path(&texture_creator, "src/img/road.jpg")?;
     let car_texture = load_texture_from_path(&texture_creator, "src/img/car.png")?;
-    let background_rect = Rect::new(0, 0, 800, 800);
 
     let mut rect: VecDeque<Vehicule> = VecDeque::new();
     let mut rng = rand::thread_rng();
     let mut can_add = false;
     let mut cooldown_time: i32 = 0;
     let mut close_calls: i32 = 0;
-
-    canvas.set_draw_color(Color::RGB(0, 0, 0));
-    canvas.clear();
-    canvas.present();
 
     let mut event_pump = sdl_context.event_pump()?;
 
@@ -88,16 +81,7 @@ fn main() -> Result<(), String> {
 
         step_traffic(&mut rect, &mut close_calls);
 
-        canvas.set_draw_color(Color::RGB(0, 0, 0));
-        canvas.clear();
-        canvas.copy(&road_texture, None, Some(background_rect))?;
-
-        for v in &rect {
-            let target = Rect::new(v.x, v.y, CAR_WIDTH, CAR_HEIGHT);
-            canvas.copy_ex(&car_texture, None, Some(target), v.angle, None, false, false)?;
-        }
-
-        canvas.present();
+        render_frame(&mut canvas, &road_texture, &car_texture, &rect)?;
 
         std::thread::sleep(Duration::from_millis(16));
     }

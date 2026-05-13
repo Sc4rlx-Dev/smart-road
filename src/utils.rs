@@ -1,11 +1,12 @@
 use std::collections::VecDeque;
 use sdl2::keyboard::Keycode;
-use sdl2::pixels::PixelFormatEnum;
-use sdl2::render::{Texture, TextureCreator};
+use sdl2::pixels::{Color, PixelFormatEnum};
+use sdl2::rect::Rect;
+use sdl2::render::{Canvas, Texture, TextureCreator};
 use sdl2::surface::Surface;
-use sdl2::video::WindowContext;
+use sdl2::video::{Window, WindowContext};
 use crate::traffic::{Direction, Vehicule};
-use crate::{DISTANCE, SAFE_DISTANCE};
+use crate::{CAR_HEIGHT, CAR_WIDTH, DISTANCE, SAFE_DISTANCE};
 
 
 
@@ -91,4 +92,23 @@ pub fn step_traffic(rect: &mut VecDeque<Vehicule>, close_calls: &mut i32) {
     }
 
     *rect = new_cars;
+}
+
+pub fn render_frame(
+    canvas: &mut Canvas<Window>,
+    road_texture: &Texture,
+    car_texture: &Texture,
+    rect: &VecDeque<Vehicule>,
+) -> Result<(), String> {
+    canvas.set_draw_color(Color::RGB(0, 0, 0));
+    canvas.clear();
+    canvas.copy(road_texture, None, Some(Rect::new(0, 0, 800, 800)))?;
+
+    for v in rect {
+        let target = Rect::new(v.x, v.y, CAR_WIDTH, CAR_HEIGHT);
+        canvas.copy_ex(car_texture, None, Some(target), v.angle, None, false, false)?;
+    }
+
+    canvas.present();
+    Ok(())
 }
