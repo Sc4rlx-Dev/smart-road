@@ -44,6 +44,18 @@ impl Vehicule {
     }
 
     pub fn update(&mut self) {
+        if let Some(new_dir) = self.should_turning() {
+            self.direction = new_dir;
+            self.angle = match new_dir {
+                Direction::Up => 0.0,
+                Direction::Down => 180.0,
+                Direction::Left => -90.0,
+                Direction::Right => 90.0,
+            };
+            self.turning = false;
+            self.speed = 0;
+        }
+
         match self.direction {
             Direction::Up => self.y -= self.speed,
             Direction::Down => self.y += self.speed,

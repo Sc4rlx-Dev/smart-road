@@ -62,7 +62,11 @@ fn main() -> Result<(), String> {
 
                         let ranger = rng.gen_range(0..3) * 45;
                         if let Some((x, y, dir, angle)) = spawn_params(key, ranger) {
-                            rect.push_back(Vehicule::new(x, y, dir, angle));
+                            let mut v = Vehicule::new(x, y, dir, angle);
+                            if ranger == 0 || ranger == 90 {
+                                v.turning = true;
+                            }
+                            rect.push_back(v);
                             can_add = true;
                         }
                     }
