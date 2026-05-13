@@ -112,15 +112,24 @@ fn main() -> Result<(), String> {
             }
         }
 
-        rect.retain_mut(|v| {
+        let mut new_cars: VecDeque<Vehicule> = VecDeque::new();
+
+        for v in rect.iter_mut() {
             v.update();
-            match v.direction {
-                Direction::Up => v.y > -10,
-                Direction::Down => v.y < 810,
-                Direction::Left => v.x > -10,
-                Direction::Right => v.x < 810,
+
+            let out = match v.direction {
+                Direction::Up => v.y < -10,
+                Direction::Down => v.y > 810,
+                Direction::Left => v.x < -10,
+                Direction::Right => v.x > 810,
+            };
+
+            if !out {
+                new_cars.push_back(*v);
             }
-        });
+        }
+
+        rect = new_cars;
 
         canvas.set_draw_color(Color::RGB(0, 0, 0));
         canvas.clear();
