@@ -1,6 +1,8 @@
-mod vehicule;
+mod traffic;
+mod utils;
 
-use vehicule::{Direction, Vehicule};
+use traffic::Vehicule;
+use utils::{is_off_screen, load_texture_from_path, spawn_params};
 
 use std::collections::VecDeque;
 use std::time::Duration;
@@ -8,35 +10,13 @@ use std::time::Duration;
 use rand::Rng;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
-use sdl2::pixels::{Color, PixelFormatEnum};
+use sdl2::pixels::Color;
 use sdl2::rect::Rect;
-use sdl2::render::{Texture, TextureCreator};
-use sdl2::surface::Surface;
-use sdl2::video::WindowContext;
 
 const CAR_WIDTH: u32 = 35;
 const CAR_HEIGHT: u32 = 30;
 const DISTANCE: i32 = 40;
 const SAFE_DISTANCE: i32 = 300;
-
-fn load_texture_from_path<'a>(
-    texture_creator: &'a TextureCreator<WindowContext>,
-    path: &str,
-) -> Result<Texture<'a>, String> {
-    let img = image::open(path).map_err(|e| e.to_string())?.to_rgba8();
-    let (width, height) = img.dimensions();
-
-    let mut surface = Surface::new(width, height, PixelFormatEnum::RGBA32)
-        .map_err(|e| e.to_string())?;
-
-    surface.with_lock_mut(|buffer: &mut [u8]| {
-        buffer.copy_from_slice(&img);
-    });
-
-    texture_creator
-        .create_texture_from_surface(&surface)
-        .map_err(|e| e.to_string())
-}
 
 fn main() -> Result<(), String> {
     let sdl_context = sdl2::init()?;
@@ -63,6 +43,7 @@ fn main() -> Result<(), String> {
     let mut rng = rand::thread_rng();
     let mut can_add = false;
     let mut cooldown_time: i32 = 0;
+    let mut close_calls: i32 = 0;
 
     canvas.set_draw_color(Color::RGB(0, 0, 0));
     canvas.clear();
@@ -87,17 +68,10 @@ fn main() -> Result<(), String> {
                         };
 
                         let ranger = rng.gen_range(0..3) * 45;
-                        let (x, y, dir, angle) = match key {
-                            Keycode::Up => (410 + ranger, 800, Direction::Up, 0.0),
-                            Keycode::Down => (275 + ranger, 0, Direction::Down, 180.0),
-                            Keycode::Left => (800, 270 + ranger, Direction::Left, -90.0),
-                            Keycode::Right => (0, 400 + ranger, Direction::Right, 90.0),
-                            _ => continue,
-                        };
-
-                        let v = Vehicule::new(x, y, dir, angle);
-                        rect.push_back(v);
-                        can_add = true;
+                        if let Some((x, y, dir, angle)) = spawn_params(key, ranger) {
+                            rect.push_back(Vehicule::new(x, y, dir, angle));
+                            can_add = true;
+                        }
                     }
                 }
                 _ => {}
@@ -106,7 +80,7 @@ fn main() -> Result<(), String> {
 
         if can_add {
             cooldown_time += 1;
-            if cooldown_time >= 350 {
+            if cooldown_time >= 450 {
                 can_add = false;
                 cooldown_time = 0;
             }
@@ -126,6 +100,10 @@ fn main() -> Result<(), String> {
                     }
                     if v.collitions(other, DISTANCE) {
                         can_update_car = false;
+                        if v.states {
+                            close_calls += 1;
+                        }
+                        v.states = false;
                         break;
                     }
                 }
@@ -141,14 +119,7 @@ fn main() -> Result<(), String> {
                 }
             }
 
-            let out = match v.direction {
-                Direction::Up => v.y < -10,
-                Direction::Down => v.y > 810,
-                Direction::Left => v.x < -10,
-                Direction::Right => v.x > 810,
-            };
-
-            if !out {
+            if !is_off_screen(v) {
                 new_cars.push_back(*v);
             }
         }
