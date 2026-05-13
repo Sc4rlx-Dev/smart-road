@@ -110,6 +110,12 @@ fn main() -> Result<(), String> {
         canvas.set_draw_color(Color::RGB(0, 0, 0));
         canvas.clear();
         canvas.copy(&road_texture, None, Some(background_rect))?;
+
+        for v in &rect {
+            let target = Rect::new(v.x, v.y, CAR_WIDTH, CAR_HEIGHT);
+            canvas.copy_ex(&car_texture, None, Some(target), v.angle, None, false, false)?;
+        }
+
         canvas.present();
 
         std::thread::sleep(Duration::from_millis(16));
