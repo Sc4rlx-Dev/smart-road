@@ -73,6 +73,26 @@ fn main() -> Result<(), String> {
                     keycode: Some(Keycode::Escape),
                     ..
                 } => break 'running,
+                Event::KeyDown { keycode: Some(k), .. } => {
+                    let key = if k == Keycode::R {
+                        let dirs = [Keycode::Up, Keycode::Down, Keycode::Left, Keycode::Right];
+                        dirs[rng.gen_range(0..dirs.len())]
+                    } else {
+                        k
+                    };
+
+                    let ranger = rng.gen_range(0..3) * 45;
+                    let (x, y, dir, angle) = match key {
+                        Keycode::Up => (410 + ranger, 800, Direction::Up, 0.0),
+                        Keycode::Down => (275 + ranger, 0, Direction::Down, 180.0),
+                        Keycode::Left => (800, 270 + ranger, Direction::Left, -90.0),
+                        Keycode::Right => (0, 400 + ranger, Direction::Right, 90.0),
+                        _ => continue,
+                    };
+
+                    let v = Vehicule::new(x, y, dir, angle);
+                    rect.push_back(v);
+                }
                 _ => {}
             }
         }
