@@ -8,6 +8,13 @@ use sdl2::render::{Texture, TextureCreator};
 use sdl2::surface::Surface;
 use sdl2::video::WindowContext;
 
+fn load_texture_from_path<'a>(
+    texture_creator: &'a TextureCreator<WindowContext>,
+    path: &str,
+) -> Result<Texture<'a>, String> {
+    todo!()
+}
+
 fn main() -> Result<(), String> {
     let sdl_context = sdl2::init()?;
     let video_subsystem = sdl_context.video()?;
