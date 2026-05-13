@@ -97,6 +97,16 @@ fn main() -> Result<(), String> {
             }
         }
 
+        rect.retain_mut(|v| {
+            v.update();
+            match v.direction {
+                Direction::Up => v.y > -10,
+                Direction::Down => v.y < 810,
+                Direction::Left => v.x > -10,
+                Direction::Right => v.x < 810,
+            }
+        });
+
         canvas.set_draw_color(Color::RGB(0, 0, 0));
         canvas.clear();
         canvas.copy(&road_texture, None, Some(background_rect))?;
