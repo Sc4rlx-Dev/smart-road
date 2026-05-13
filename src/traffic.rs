@@ -53,6 +53,23 @@ impl Vehicule {
         self.distance += self.speed;
     }
 
+    pub fn should_turning(&self) -> Option<Direction> {
+        if !self.turning {
+            return None;
+        }
+        match self.direction {
+            Direction::Up if self.x == 410 && self.y <= 355 => Some(Direction::Left),
+            Direction::Up if self.x == 500 && self.y <= 490 => Some(Direction::Right),
+            Direction::Down if self.x == 365 && self.y >= 405 => Some(Direction::Right),
+            Direction::Down if self.x == 275 && self.y >= 270 => Some(Direction::Left),
+            Direction::Left if self.y == 270 && self.x <= 500 => Some(Direction::Up),
+            Direction::Left if self.y == 360 && self.x <= 365 => Some(Direction::Down),
+            Direction::Right if self.y == 400 && self.x >= 405 => Some(Direction::Up),
+            Direction::Right if self.y == 490 && self.x >= 275 => Some(Direction::Down),
+            _ => None,
+        }
+    }
+
     pub fn collitions(&self, other: &Vehicule, safe_distance: i32) -> bool {
         let dx = (self.x - other.x).abs();
         let dy = (self.y - other.y).abs();
