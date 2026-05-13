@@ -2,7 +2,7 @@ mod traffic;
 mod utils;
 
 use traffic::Vehicule;
-use utils::{is_off_screen, load_texture_from_path, spawn_params};
+use utils::{load_texture_from_path, spawn_params, step_traffic};
 
 use std::collections::VecDeque;
 use std::time::Duration;
@@ -86,45 +86,7 @@ fn main() -> Result<(), String> {
             }
         }
 
-        let mut new_cars: VecDeque<Vehicule> = VecDeque::new();
-        let current_state = rect.clone();
-
-        for (i, v) in rect.iter_mut().enumerate() {
-            let mut can_update_car = true;
-            let mut spedd_bolean = true;
-
-            for (j, other) in current_state.iter().enumerate() {
-                if i != j {
-                    if v.collitions(other, SAFE_DISTANCE) {
-                        spedd_bolean = false;
-                    }
-                    if v.collitions(other, DISTANCE) {
-                        can_update_car = false;
-                        if v.states {
-                            close_calls += 1;
-                        }
-                        v.states = false;
-                        break;
-                    }
-                }
-            }
-
-            if can_update_car {
-                if v.frame_count >= 10 {
-                    v.speed = if spedd_bolean { 3 } else { 1 };
-                    v.update();
-                    v.frame_count = 0;
-                } else {
-                    v.frame_count += 1;
-                }
-            }
-
-            if !is_off_screen(v) {
-                new_cars.push_back(*v);
-            }
-        }
-
-        rect = new_cars;
+        step_traffic(&mut rect, &mut close_calls);
 
         canvas.set_draw_color(Color::RGB(0, 0, 0));
         canvas.clear();
