@@ -1,5 +1,7 @@
 mod vehicule;
 
+use vehicule::{Direction, Vehicule};
+
 use std::time::Duration;
 
 use sdl2::event::Event;
@@ -48,6 +50,8 @@ fn main() -> Result<(), String> {
     let texture_creator = canvas.texture_creator();
     let road_texture = load_texture_from_path(&texture_creator, "src/img/road.jpg")?;
     let background_rect = Rect::new(0, 0, 800, 800);
+
+    let _test_vehicle = Vehicule::new(410, 800, Direction::Up, 0.0);
 
     canvas.set_draw_color(Color::RGB(0, 0, 0));
     canvas.clear();
