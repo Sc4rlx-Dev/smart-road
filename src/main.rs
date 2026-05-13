@@ -113,9 +113,33 @@ fn main() -> Result<(), String> {
         }
 
         let mut new_cars: VecDeque<Vehicule> = VecDeque::new();
+        let current_state = rect.clone();
 
-        for v in rect.iter_mut() {
-            v.update();
+        for (i, v) in rect.iter_mut().enumerate() {
+            let mut can_update_car = true;
+            let mut spedd_bolean = true;
+
+            for (j, other) in current_state.iter().enumerate() {
+                if i != j {
+                    if v.collitions(other, SAFE_DISTANCE) {
+                        spedd_bolean = false;
+                    }
+                    if v.collitions(other, DISTANCE) {
+                        can_update_car = false;
+                        break;
+                    }
+                }
+            }
+
+            if can_update_car {
+                if v.frame_count >= 10 {
+                    v.speed = if spedd_bolean { 3 } else { 1 };
+                    v.update();
+                    v.frame_count = 0;
+                } else {
+                    v.frame_count += 1;
+                }
+            }
 
             let out = match v.direction {
                 Direction::Up => v.y < -10,
