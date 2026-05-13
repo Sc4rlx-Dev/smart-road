@@ -11,6 +11,17 @@ pub enum Direction {
     Right,
 }
 
+impl Direction {
+    pub fn index(&self) -> usize {
+        match self {
+            Direction::Up => 0,
+            Direction::Down => 1,
+            Direction::Left => 2,
+            Direction::Right => 3,
+        }
+    }
+}
+
 #[derive(Clone, Copy)]
 pub struct Vehicule {
     pub x: i32,
@@ -91,7 +102,7 @@ impl Vehicule {
         let dx = (self.x - other.x).abs();
         let dy = (self.y - other.y).abs();
 
-        match self.direction {
+        let ahead = match self.direction {
             Direction::Down => {
                 other.y >= self.y && dy <= safe_distance && dx < CAR_WIDTH as i32
             }
@@ -104,7 +115,39 @@ impl Vehicule {
             Direction::Right => {
                 other.x >= self.x && dx <= safe_distance && dy < CAR_HEIGHT as i32
             }
+        };
+
+        if ahead {
+            return true;
         }
+
+        let perpendicular = matches!(
+            (self.direction, other.direction),
+            (Direction::Up | Direction::Down, Direction::Left | Direction::Right)
+                | (Direction::Left | Direction::Right, Direction::Up | Direction::Down)
+        );
+
+        if !perpendicular {
+            return false;
+        }
+
+        let self_remaining = match self.direction {
+            Direction::Up => self.y - other.y,
+            Direction::Down => other.y - self.y,
+            Direction::Left => self.x - other.x,
+            Direction::Right => other.x - self.x,
+        };
+        let other_remaining = match other.direction {
+            Direction::Up => other.y - self.y,
+            Direction::Down => self.y - other.y,
+            Direction::Left => other.x - self.x,
+            Direction::Right => self.x - other.x,
+        };
+
+        self_remaining >= 0
+            && self_remaining <= safe_distance
+            && other_remaining >= 0
+            && other_remaining <= safe_distance
     }
 }
 

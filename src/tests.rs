@@ -44,11 +44,10 @@ fn safety_distance_ignores_different_lane() {
 }
 
 #[test]
-fn intersection_conflict_one_car_brakes() {
+fn rear_end_conflict_one_car_brakes() {
     let mut a = Vehicule::new(410, 500, Direction::Up, 0.0);
-    let mut b = Vehicule::new(410, 470, Direction::Up, 0.0);
+    let b = Vehicule::new(410, 470, Direction::Up, 0.0);
     a.speed = 3;
-    b.speed = 3;
 
     if a.collitions(&b, 40) {
         a.speed = 0;
@@ -56,7 +55,37 @@ fn intersection_conflict_one_car_brakes() {
         a.speed = 1;
     }
 
-    assert!(a.speed < 3, "a should reduce speed when b is ahead within safe zone");
+    assert!(a.speed < 3, "a should reduce speed when b is ahead in same lane");
+}
+
+#[test]
+fn cross_traffic_perpendicular_conflict_detected() {
+    let up_car = Vehicule::new(410, 450, Direction::Up, 0.0);
+    let left_car = Vehicule::new(550, 400, Direction::Left, -90.0);
+    assert!(
+        up_car.collitions(&left_car, 300),
+        "Up car at (410,450) and Left car at (550,400) approach the intersection point — should detect within slow zone"
+    );
+}
+
+#[test]
+fn cross_traffic_already_passed_ignored() {
+    let up_car = Vehicule::new(410, 200, Direction::Up, 0.0);
+    let left_car = Vehicule::new(700, 500, Direction::Left, -90.0);
+    assert!(
+        !up_car.collitions(&left_car, 300),
+        "Up car already past intersection, Left car still right of it — paths no longer converge"
+    );
+}
+
+#[test]
+fn cross_traffic_far_apart_ignored() {
+    let up_car = Vehicule::new(410, 800, Direction::Up, 0.0);
+    let left_car = Vehicule::new(800, 100, Direction::Left, -90.0);
+    assert!(
+        !up_car.collitions(&left_car, 300),
+        "Both cars far from the intersection — should not trigger"
+    );
 }
 
 #[test]

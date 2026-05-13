@@ -7,12 +7,13 @@ mod tests;
 
 use data::draw_confirm_exit;
 use traffic::Vehicule;
-use utils::{load_texture_from_path, render_frame, spawn_params, step_traffic, Stats};
+use utils::{
+    load_texture_from_path, random_direction_keycode, render_frame, step_traffic, try_spawn, Stats,
+};
 
 use std::collections::VecDeque;
 use std::time::Duration;
 
-use rand::Rng;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 
@@ -20,6 +21,7 @@ const CAR_WIDTH: u32 = 35;
 const CAR_HEIGHT: u32 = 30;
 const DISTANCE: i32 = 40;
 const SAFE_DISTANCE: i32 = 300;
+const COOLDOWN_FRAMES: i32 = 150;
 
 fn main() -> Result<(), String> {
     let sdl_context = sdl2::init()?;
@@ -43,8 +45,8 @@ fn main() -> Result<(), String> {
 
     let mut rect: VecDeque<Vehicule> = VecDeque::new();
     let mut rng = rand::thread_rng();
-    let mut can_add = false;
-    let mut cooldown_time: i32 = 0;
+    let mut cooldowns: [i32; 4] = [0; 4];
+    let mut auto_spawn = false;
     let mut stats = Stats::new();
     let mut ask_exit = false;
 
@@ -78,37 +80,29 @@ fn main() -> Result<(), String> {
                     )?;
                     ask_exit = true;
                 }
+                Event::KeyDown {
+                    keycode: Some(Keycode::R),
+                    ..
+                } => {
+                    auto_spawn = !auto_spawn;
+                }
                 Event::KeyDown { keycode: Some(k), .. } => {
-                    if !can_add {
-                        let key = if k == Keycode::R {
-                            let dirs = [Keycode::Up, Keycode::Down, Keycode::Left, Keycode::Right];
-                            dirs[rng.gen_range(0..dirs.len())]
-                        } else {
-                            k
-                        };
-
-                        let ranger = rng.gen_range(0..3) * 45;
-                        if let Some((x, y, dir, angle)) = spawn_params(key, ranger) {
-                            let mut v = Vehicule::new(x, y, dir, angle);
-                            if ranger == 0 || ranger == 90 {
-                                v.turning = true;
-                            }
-                            rect.push_back(v);
-                            can_add = true;
-                        }
-                    }
+                    try_spawn(&mut rect, &mut rng, &mut cooldowns, k);
                 }
                 _ => {}
             }
         }
 
         if !ask_exit {
-            if can_add {
-                cooldown_time += 1;
-                if cooldown_time >= 450 {
-                    can_add = false;
-                    cooldown_time = 0;
+            for c in cooldowns.iter_mut() {
+                if *c > 0 {
+                    *c -= 1;
                 }
+            }
+
+            if auto_spawn {
+                let key = random_direction_keycode(&mut rng);
+                try_spawn(&mut rect, &mut rng, &mut cooldowns, key);
             }
 
             step_traffic(&mut rect, &mut stats);
