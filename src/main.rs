@@ -1,8 +1,13 @@
+mod data;
 mod traffic;
 mod utils;
 
+#[cfg(test)]
+mod tests;
+
+use data::draw_confirm_exit;
 use traffic::Vehicule;
-use utils::{load_texture_from_path, render_frame, spawn_params, step_traffic};
+use utils::{load_texture_from_path, render_frame, spawn_params, step_traffic, Stats};
 
 use std::collections::VecDeque;
 use std::time::Duration;
@@ -40,7 +45,8 @@ fn main() -> Result<(), String> {
     let mut rng = rand::thread_rng();
     let mut can_add = false;
     let mut cooldown_time: i32 = 0;
-    let mut close_calls: i32 = 0;
+    let mut stats = Stats::new();
+    let mut ask_exit = false;
 
     let mut event_pump = sdl_context.event_pump()?;
 
@@ -50,7 +56,28 @@ fn main() -> Result<(), String> {
                 Event::Quit { .. } | Event::KeyDown {
                     keycode: Some(Keycode::Escape),
                     ..
-                } => break 'running,
+                } => {
+                    if ask_exit || stats.vec_timer.is_empty() {
+                        break 'running;
+                    }
+
+                    let max_velocity = stats.velocities.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
+                    let min_velocity = stats.velocities.iter().cloned().fold(f32::INFINITY, f32::min);
+                    let max_timer = stats.vec_timer.iter().max().cloned().unwrap_or_default();
+                    let min_timer = stats.vec_timer.iter().min().cloned().unwrap_or_default();
+
+                    render_frame(&mut canvas, &road_texture, &car_texture, &rect)?;
+                    draw_confirm_exit(
+                        &mut canvas,
+                        stats.nbr_of_cars,
+                        max_velocity,
+                        min_velocity,
+                        &max_timer,
+                        &min_timer,
+                        stats.close_calls,
+                    )?;
+                    ask_exit = true;
+                }
                 Event::KeyDown { keycode: Some(k), .. } => {
                     if !can_add {
                         let key = if k == Keycode::R {
@@ -75,17 +102,18 @@ fn main() -> Result<(), String> {
             }
         }
 
-        if can_add {
-            cooldown_time += 1;
-            if cooldown_time >= 450 {
-                can_add = false;
-                cooldown_time = 0;
+        if !ask_exit {
+            if can_add {
+                cooldown_time += 1;
+                if cooldown_time >= 450 {
+                    can_add = false;
+                    cooldown_time = 0;
+                }
             }
+
+            step_traffic(&mut rect, &mut stats);
+            render_frame(&mut canvas, &road_texture, &car_texture, &rect)?;
         }
-
-        step_traffic(&mut rect, &mut close_calls);
-
-        render_frame(&mut canvas, &road_texture, &car_texture, &rect)?;
 
         std::thread::sleep(Duration::from_millis(16));
     }

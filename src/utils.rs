@@ -1,4 +1,6 @@
 use std::collections::VecDeque;
+use std::time::Duration;
+
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::{Color, PixelFormatEnum};
 use sdl2::rect::Rect;
@@ -13,6 +15,24 @@ use crate::{CAR_HEIGHT, CAR_WIDTH, DISTANCE, SAFE_DISTANCE};
 
 
 
+
+pub struct Stats {
+    pub nbr_of_cars: i32,
+    pub close_calls: i32,
+    pub vec_timer: Vec<Duration>,
+    pub velocities: Vec<f32>,
+}
+
+impl Stats {
+    pub fn new() -> Self {
+        Stats {
+            nbr_of_cars: 0,
+            close_calls: 0,
+            vec_timer: Vec::new(),
+            velocities: Vec::new(),
+        }
+    }
+}
 
 pub fn load_texture_from_path<'a>(
     texture_creator: &'a TextureCreator<WindowContext>,
@@ -52,7 +72,7 @@ pub fn spawn_params(key: Keycode, ranger: i32) -> Option<(i32, i32, Direction, f
     }
 }
 
-pub fn step_traffic(rect: &mut VecDeque<Vehicule>, close_calls: &mut i32) {
+pub fn step_traffic(rect: &mut VecDeque<Vehicule>, stats: &mut Stats) {
     let mut new_cars: VecDeque<Vehicule> = VecDeque::new();
     let current_state = rect.clone();
 
@@ -68,7 +88,7 @@ pub fn step_traffic(rect: &mut VecDeque<Vehicule>, close_calls: &mut i32) {
                 if v.collitions(other, DISTANCE) {
                     can_update_car = false;
                     if v.states {
-                        *close_calls += 1;
+                        stats.close_calls += 1;
                     }
                     v.states = false;
                     break;
@@ -86,7 +106,11 @@ pub fn step_traffic(rect: &mut VecDeque<Vehicule>, close_calls: &mut i32) {
             }
         }
 
-        if !is_off_screen(v) {
+        if is_off_screen(v) {
+            stats.nbr_of_cars += 1;
+            stats.vec_timer.push(v.timer.elapsed());
+            stats.velocities.push(v.velocity);
+        } else {
             new_cars.push_back(*v);
         }
     }

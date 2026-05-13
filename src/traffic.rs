@@ -44,6 +44,11 @@ impl Vehicule {
     }
 
     pub fn update(&mut self) {
+        let elapsed = self.timer.elapsed().as_secs_f32();
+        if elapsed > 0.0 {
+            self.velocity = self.distance as f32 / elapsed;
+        }
+
         if let Some(new_dir) = self.should_turning() {
             self.direction = new_dir;
             self.angle = match new_dir {
@@ -102,3 +107,4 @@ impl Vehicule {
         }
     }
 }
+
