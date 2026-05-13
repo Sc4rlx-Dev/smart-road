@@ -12,7 +12,19 @@ fn load_texture_from_path<'a>(
     texture_creator: &'a TextureCreator<WindowContext>,
     path: &str,
 ) -> Result<Texture<'a>, String> {
-    todo!()
+    let img = image::open(path).map_err(|e| e.to_string())?.to_rgba8();
+    let (width, height) = img.dimensions();
+
+    let mut surface = Surface::new(width, height, PixelFormatEnum::RGBA32)
+        .map_err(|e| e.to_string())?;
+
+    surface.with_lock_mut(|buffer: &mut [u8]| {
+        buffer.copy_from_slice(&img);
+    });
+
+    texture_creator
+        .create_texture_from_surface(&surface)
+        .map_err(|e| e.to_string())
 }
 
 fn main() -> Result<(), String> {
