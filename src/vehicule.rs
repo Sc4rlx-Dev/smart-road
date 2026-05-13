@@ -1,5 +1,8 @@
 use std::time::Instant;
 
+const CAR_WIDTH: u32 = 25;
+const CAR_HEIGHT: u32 = 30;
+
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum Direction {
     Up,
@@ -48,5 +51,25 @@ impl Vehicule {
             Direction::Right => self.x += self.speed,
         }
         self.distance += self.speed;
+    }
+
+    pub fn collitions(&self, other: &Vehicule, safe_distance: i32) -> bool {
+        let dx = (self.x - other.x).abs();
+        let dy = (self.y - other.y).abs();
+
+        match self.direction {
+            Direction::Down => {
+                other.y >= self.y && dy <= safe_distance && dx < CAR_WIDTH as i32
+            }
+            Direction::Up => {
+                self.y >= other.y && dy <= safe_distance && dx < CAR_WIDTH as i32
+            }
+            Direction::Left => {
+                self.x >= other.x && dx <= safe_distance && dy < CAR_HEIGHT as i32
+            }
+            Direction::Right => {
+                other.x >= self.x && dx <= safe_distance && dy < CAR_HEIGHT as i32
+            }
+        }
     }
 }

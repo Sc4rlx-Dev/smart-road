@@ -16,6 +16,8 @@ use sdl2::video::WindowContext;
 
 const CAR_WIDTH: u32 = 35;
 const CAR_HEIGHT: u32 = 30;
+const DISTANCE: i32 = 40;
+const SAFE_DISTANCE: i32 = 300;
 
 fn load_texture_from_path<'a>(
     texture_creator: &'a TextureCreator<WindowContext>,
@@ -99,6 +101,14 @@ fn main() -> Result<(), String> {
                     }
                 }
                 _ => {}
+            }
+        }
+
+        if can_add {
+            cooldown_time += 1;
+            if cooldown_time >= 350 {
+                can_add = false;
+                cooldown_time = 0;
             }
         }
 
