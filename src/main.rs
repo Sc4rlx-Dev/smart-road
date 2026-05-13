@@ -1,3 +1,5 @@
+mod vehicule;
+
 use std::time::Duration;
 
 use sdl2::event::Event;
@@ -43,6 +45,10 @@ fn main() -> Result<(), String> {
         .build()
         .map_err(|e| e.to_string())?;
 
+    let texture_creator = canvas.texture_creator();
+    let road_texture = load_texture_from_path(&texture_creator, "src/img/road.jpg")?;
+    let background_rect = Rect::new(0, 0, 800, 800);
+
     canvas.set_draw_color(Color::RGB(0, 0, 0));
     canvas.clear();
     canvas.present();
@@ -62,6 +68,7 @@ fn main() -> Result<(), String> {
 
         canvas.set_draw_color(Color::RGB(0, 0, 0));
         canvas.clear();
+        canvas.copy(&road_texture, None, Some(background_rect))?;
         canvas.present();
 
         std::thread::sleep(Duration::from_millis(16));
