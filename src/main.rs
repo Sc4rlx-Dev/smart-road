@@ -2,8 +2,10 @@ mod vehicule;
 
 use vehicule::{Direction, Vehicule};
 
+use std::collections::VecDeque;
 use std::time::Duration;
 
+use rand::Rng;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::{Color, PixelFormatEnum};
@@ -11,6 +13,9 @@ use sdl2::rect::Rect;
 use sdl2::render::{Texture, TextureCreator};
 use sdl2::surface::Surface;
 use sdl2::video::WindowContext;
+
+const CAR_WIDTH: u32 = 35;
+const CAR_HEIGHT: u32 = 30;
 
 fn load_texture_from_path<'a>(
     texture_creator: &'a TextureCreator<WindowContext>,
@@ -49,9 +54,11 @@ fn main() -> Result<(), String> {
 
     let texture_creator = canvas.texture_creator();
     let road_texture = load_texture_from_path(&texture_creator, "src/img/road.jpg")?;
+    let car_texture = load_texture_from_path(&texture_creator, "src/img/car.png")?;
     let background_rect = Rect::new(0, 0, 800, 800);
 
-    let _test_vehicle = Vehicule::new(410, 800, Direction::Up, 0.0);
+    let mut rect: VecDeque<Vehicule> = VecDeque::new();
+    let mut rng = rand::thread_rng();
 
     canvas.set_draw_color(Color::RGB(0, 0, 0));
     canvas.clear();
