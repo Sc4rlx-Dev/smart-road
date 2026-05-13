@@ -32,7 +32,6 @@ pub struct Vehicule {
     pub distance: i32,
     pub timer: Instant,
     pub states: bool,
-    pub frame_count: u32,
     pub angle: f64,
     pub turning: bool,
 }
@@ -48,7 +47,6 @@ impl Vehicule {
             distance: 0,
             timer: Instant::now(),
             states: true,
-            frame_count: 0,
             turning: false,
             velocity: 0.0,
         }

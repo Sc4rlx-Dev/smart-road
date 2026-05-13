@@ -98,7 +98,7 @@ fn main() -> Result<(), String> {
         if !ask_exit {
             if can_add {
                 cooldown_time += 1;
-                if cooldown_time >= 40 {
+                if cooldown_time >= 35 {
                     can_add = false;
                     cooldown_time = 0;
                 }
